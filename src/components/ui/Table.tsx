@@ -22,7 +22,7 @@ export function SortHeader({
   const sortable = !!columnKey && !!onSort;
   const active = activeKey === columnKey;
   return (
-    <th className={cn('sticky top-16 z-10 border-b border-border bg-muted px-4 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground', align === 'right' && 'text-right', align === 'center' && 'text-center', className)}>
+    <th className={cn('border-b border-border bg-muted px-4 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground', align === 'right' && 'text-right', align === 'center' && 'text-center', className)}>
       {sortable ? (
         <button onClick={() => onSort!(columnKey!)} className={cn('inline-flex items-center gap-1.5 transition-colors hover:text-foreground', active && 'text-foreground', align === 'right' && 'flex-row-reverse')}>
           {label}
