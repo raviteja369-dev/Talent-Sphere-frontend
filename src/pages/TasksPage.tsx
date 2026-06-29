@@ -117,7 +117,7 @@ export function TasksPage() {
           <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="sticky top-16 z-10 border-b border-border bg-muted/95 text-left backdrop-blur">
+              <tr className="text-left">
                 <SortHeader label="Task" columnKey="title" activeKey={table.sortKey} dir={table.sortDir} onSort={table.toggleSort} />
                 <SortHeader label="Assignee" columnKey="assignee" activeKey={table.sortKey} dir={table.sortDir} onSort={table.toggleSort} />
                 <SortHeader label="Priority" columnKey="priority" activeKey={table.sortKey} dir={table.sortDir} onSort={table.toggleSort} />

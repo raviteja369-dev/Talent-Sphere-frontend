@@ -110,7 +110,7 @@ export function PeoplePage() {
           <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="sticky top-16 z-10 border-b border-border bg-muted/95 text-left backdrop-blur">
+              <tr className="text-left">
                 <SortHeader label="Name" columnKey="name" activeKey={table.sortKey} dir={table.sortDir} onSort={table.toggleSort} />
                 <SortHeader label="Role / Title" columnKey="jobTitle" activeKey={table.sortKey} dir={table.sortDir} onSort={table.toggleSort} className="hidden sm:table-cell" />
                 <SortHeader label="Department" columnKey="department" activeKey={table.sortKey} dir={table.sortDir} onSort={table.toggleSort} className="hidden md:table-cell" />
