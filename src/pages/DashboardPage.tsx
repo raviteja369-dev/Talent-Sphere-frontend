@@ -89,21 +89,21 @@ export function DashboardPage() {
   );
 }
 
-const DEPT_CHART_COLORS = ['#1E3A8A', '#2563EB', '#059669', '#F59E0B', '#64748B', '#4F46E5'];
+const DEPT_CHART_COLORS = ['#2563EB', '#10B981', '#F97316', '#8B5CF6', '#6B7280', '#0EA5E9'];
 
 function AdminDashboard({ stats, departments }: { stats: any; departments: any[] }) {
   const chartData = departments.map((d, i) => ({ name: d.name, progress: d.progress, color: DEPT_CHART_COLORS[i % DEPT_CHART_COLORS.length] }));
   return (
     <>
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <StatCard label="Total Managers" value={stats.totalManagers} icon={UserCog} tone="indigo" delay={0} />
-        <StatCard label="Total Employees" value={stats.totalEmployees} icon={Users} tone="violet" delay={0.05} />
-        <StatCard label="Total Projects" value={stats.totalProjects} icon={FolderKanban} tone="sky" delay={0.1} />
-        <StatCard label="Active Tasks" value={stats.activeTasks} icon={ListChecks} tone="amber" delay={0.15} />
-        <StatCard label="Completed Tasks" value={stats.completedTasks} icon={CheckCircle2} tone="emerald" delay={0.2} />
-        <StatCard label="Pending Approvals" value={stats.pendingApprovals} icon={Hourglass} tone="amber" delay={0.25} />
-        <StatCard label="Delayed Tasks" value={stats.delayedTasks} icon={Clock} tone="rose" delay={0.3} />
-        <StatCard label="Overdue Tasks" value={stats.overdueTasks} icon={AlertTriangle} tone="rose" delay={0.35} />
+      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+        <StatCard label="Total Managers" value={stats.totalManagers} icon={UserCog} tone="blue" hint="Across all departments" delay={0} />
+        <StatCard label="Total Employees" value={stats.totalEmployees} icon={Users} tone="purple" hint="Active workforce" delay={0.05} />
+        <StatCard label="Total Projects" value={stats.totalProjects} icon={FolderKanban} tone="sky" hint="In flight org-wide" delay={0.1} />
+        <StatCard label="Active Tasks" value={stats.activeTasks} icon={ListChecks} tone="orange" hint="Currently in progress" delay={0.15} />
+        <StatCard label="Completed Tasks" value={stats.completedTasks} icon={CheckCircle2} tone="emerald" hint="Signed off & closed" delay={0.2} />
+        <StatCard label="Pending Approvals" value={stats.pendingApprovals} icon={Hourglass} tone="amber" hint="Awaiting review" delay={0.25} />
+        <StatCard label="Delayed Tasks" value={stats.delayedTasks} icon={Clock} tone="gray" hint="Behind schedule" delay={0.3} />
+        <StatCard label="Overdue Tasks" value={stats.overdueTasks} icon={AlertTriangle} tone="rose" hint="Past their due date" delay={0.35} />
       </div>
 
       <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-3">
@@ -140,28 +140,28 @@ function AdminDashboard({ stats, departments }: { stats: any; departments: any[]
 
 function ManagerStats({ stats }: { stats: any }) {
   return (
-    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-      <StatCard label="Assigned Projects" value={stats.assignedProjects} icon={FolderKanban} tone="indigo" />
-      <StatCard label="Assigned Tasks" value={stats.assignedTasks} icon={ListChecks} tone="sky" delay={0.05} />
-      <StatCard label="Team Members" value={stats.teamMembers} icon={Users} tone="violet" delay={0.1} />
-      <StatCard label="Pending Reviews" value={stats.pendingReviews} icon={ClipboardCheck} tone="amber" delay={0.15} />
-      <StatCard label="My Admin Tasks" value={stats.myAdminTasks} icon={Inbox} tone="indigo" delay={0.2} />
-      <StatCard label="Completed Reviews" value={stats.completedReviews} icon={CheckCircle2} tone="emerald" delay={0.25} />
-      <StatCard label="Overdue (Team)" value={stats.overdueTasks} icon={AlertTriangle} tone="rose" delay={0.3} />
-      <StatCard label="Team Progress" value={`${stats.teamProgress}%`} icon={TrendingUp} tone="emerald" delay={0.35} />
+    <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+      <StatCard label="Assigned Projects" value={stats.assignedProjects} icon={FolderKanban} tone="blue" hint="You're managing" />
+      <StatCard label="Assigned Tasks" value={stats.assignedTasks} icon={ListChecks} tone="sky" hint="Across your team" delay={0.05} />
+      <StatCard label="Team Members" value={stats.teamMembers} icon={Users} tone="purple" hint="Direct reports" delay={0.1} />
+      <StatCard label="Pending Reviews" value={stats.pendingReviews} icon={ClipboardCheck} tone="amber" hint="Awaiting your sign-off" delay={0.15} />
+      <StatCard label="My Admin Tasks" value={stats.myAdminTasks} icon={Inbox} tone="orange" hint="Escalated to admin" delay={0.2} />
+      <StatCard label="Completed Reviews" value={stats.completedReviews} icon={CheckCircle2} tone="emerald" hint="Approved this cycle" delay={0.25} />
+      <StatCard label="Overdue (Team)" value={stats.overdueTasks} icon={AlertTriangle} tone="rose" hint="Need attention" delay={0.3} />
+      <StatCard label="Team Progress" value={`${stats.teamProgress}%`} icon={TrendingUp} tone="emerald" hint="Average completion" delay={0.35} />
     </div>
   );
 }
 
 function EmployeeStats({ stats }: { stats: any }) {
   return (
-    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-      <StatCard label="My Tasks" value={stats.myTasks} icon={ListChecks} tone="indigo" />
-      <StatCard label="Today's Tasks" value={stats.todayTasks} icon={CalendarDays} tone="sky" delay={0.05} />
-      <StatCard label="Upcoming Deadlines" value={stats.upcoming} icon={Clock} tone="amber" delay={0.1} />
-      <StatCard label="Pending Tasks" value={stats.pending} icon={Hourglass} tone="violet" delay={0.15} />
-      <StatCard label="Completed Tasks" value={stats.completed} icon={CheckCircle2} tone="emerald" delay={0.2} />
-      <StatCard label="Avg. Progress" value={`${stats.avgProgress}%`} icon={TrendingUp} tone="emerald" delay={0.25} />
+    <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+      <StatCard label="My Tasks" value={stats.myTasks} icon={ListChecks} tone="blue" hint="Assigned to you" />
+      <StatCard label="Today's Tasks" value={stats.todayTasks} icon={CalendarDays} tone="sky" hint="Due today" delay={0.05} />
+      <StatCard label="Upcoming Deadlines" value={stats.upcoming} icon={Clock} tone="orange" hint="Next 7 days" delay={0.1} />
+      <StatCard label="Pending Tasks" value={stats.pending} icon={Hourglass} tone="purple" hint="Not yet started" delay={0.15} />
+      <StatCard label="Completed Tasks" value={stats.completed} icon={CheckCircle2} tone="emerald" hint="Done & approved" delay={0.2} />
+      <StatCard label="Avg. Progress" value={`${stats.avgProgress}%`} icon={TrendingUp} tone="emerald" hint="Across active tasks" delay={0.25} />
     </div>
   );
 }

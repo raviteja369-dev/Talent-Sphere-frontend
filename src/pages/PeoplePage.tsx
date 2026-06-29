@@ -106,7 +106,7 @@ export function PeoplePage() {
       {isLoading ? <TableSkeleton /> : !users?.length ? (
         <EmptyState icon={Users} title={`No ${tab}s found`} description="Add people to your organization." action={<Button onClick={openCreate}><Plus className="h-4 w-4" /> Add {tab}</Button>} />
       ) : (
-        <div className="overflow-hidden rounded-xl border border-border bg-surface shadow-soft">
+        <div className="overflow-hidden rounded-2xl border border-border bg-surface shadow-card">
           <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>

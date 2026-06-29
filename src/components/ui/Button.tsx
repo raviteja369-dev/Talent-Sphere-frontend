@@ -13,12 +13,12 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 
 const variants: Record<Variant, string> = {
   primary:
-    'bg-primary text-primary-foreground hover:bg-primary-hover shadow-soft',
-  secondary: 'bg-surface text-foreground border border-border hover:bg-muted',
-  outline: 'border border-border bg-surface hover:bg-muted text-foreground',
+    'bg-primary text-primary-foreground shadow-soft hover:bg-primary-hover hover:shadow-elevated hover:-translate-y-px',
+  secondary: 'border border-border bg-surface text-foreground shadow-soft hover:bg-muted hover:border-border',
+  outline: 'border border-border bg-surface text-foreground hover:bg-muted',
   ghost: 'text-foreground hover:bg-muted',
-  danger: 'bg-danger text-white hover:bg-danger/90 shadow-soft',
-  success: 'bg-success text-white hover:bg-success/90 shadow-soft',
+  danger: 'bg-danger text-white shadow-soft hover:bg-danger/90 hover:shadow-elevated hover:-translate-y-px',
+  success: 'bg-success text-white shadow-soft hover:bg-success/90 hover:shadow-elevated hover:-translate-y-px',
 };
 
 const sizes: Record<Size, string> = {
@@ -34,7 +34,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       ref={ref}
       disabled={disabled || loading}
       className={cn(
-        'inline-flex items-center justify-center rounded-lg font-medium transition-all focus-ring disabled:opacity-50 disabled:pointer-events-none active:scale-[0.98]',
+        'inline-flex items-center justify-center rounded-lg font-medium transition-all duration-200 ease-out focus-ring disabled:pointer-events-none disabled:opacity-50 disabled:shadow-none disabled:translate-y-0 active:translate-y-0 active:scale-[0.98]',
         variants[variant],
         sizes[size],
         className

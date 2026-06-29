@@ -15,8 +15,8 @@ import type { TaskStatus } from '@/lib/types';
 import { toast } from 'sonner';
 
 // Muted enterprise palette: navy, blue, emerald, amber, slate (+ supporting tones)
-const PIE_COLORS = ['#1E3A8A', '#2563EB', '#059669', '#F59E0B', '#64748B', '#4F46E5', '#0EA5E9', '#0D9488', '#D97706', '#475569', '#DC2626'];
-const C = { navy: '#1E3A8A', blue: '#2563EB', emerald: '#059669', amber: '#F59E0B', slate: '#64748B' };
+const PIE_COLORS = ['#2563EB', '#10B981', '#F97316', '#8B5CF6', '#6B7280', '#0EA5E9', '#16A34A', '#F59E0B', '#7C3AED', '#9CA3AF', '#DC2626'];
+const C = { navy: '#1D4ED8', blue: '#2563EB', emerald: '#10B981', amber: '#F97316', slate: '#8B5CF6' };
 
 export function AnalyticsPage() {
   const { data, isLoading } = useAnalytics();

@@ -33,8 +33,8 @@ export function Topbar({ onMenu }: { onMenu: () => void }) {
   };
 
   return (
-    <header className="sticky top-0 z-20 flex h-16 items-center gap-3 border-b border-border bg-surface/85 px-4 shadow-soft backdrop-blur-xl lg:px-6">
-      <button onClick={onMenu} className="rounded-lg p-2 text-muted-foreground hover:bg-muted lg:hidden">
+    <header className="sticky top-0 z-20 flex h-16 items-center gap-3 bg-surface/90 px-4 shadow-header backdrop-blur-xl lg:px-6">
+      <button onClick={onMenu} className="rounded-lg p-2 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground lg:hidden">
         <Menu className="h-5 w-5" />
       </button>
 
@@ -57,18 +57,18 @@ export function Topbar({ onMenu }: { onMenu: () => void }) {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search tasks…"
-            className="h-9 w-56 rounded-lg border border-input bg-muted/50 pl-9 pr-3 text-sm focus-ring focus-visible:bg-surface"
+            className="h-9 w-60 rounded-xl border border-input bg-muted/50 pl-9 pr-3 text-sm transition-colors focus-ring focus-visible:border-primary/40 focus-visible:bg-surface"
           />
         </form>
 
-        <button onClick={toggle} className="rounded-lg p-2 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground" aria-label="Toggle theme">
+        <button onClick={toggle} className="rounded-xl p-2 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground" aria-label="Toggle theme">
           {theme === 'dark' ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
         </button>
 
         <Dropdown
           width="w-80"
           trigger={
-            <span className="relative flex rounded-lg p-2 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground">
+            <span className="relative flex rounded-xl p-2 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground">
               <Bell className="h-5 w-5" />
               {!!notifData?.unread && (
                 <span className="absolute right-1 top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-danger px-1 text-[10px] font-bold text-white">
@@ -116,7 +116,7 @@ export function Topbar({ onMenu }: { onMenu: () => void }) {
 
         <Dropdown
           trigger={
-            <span className="flex items-center gap-2 rounded-lg p-1 pr-2 transition-colors hover:bg-muted">
+            <span className="flex items-center gap-2 rounded-xl p-1 pr-2 transition-colors hover:bg-muted">
               <Avatar name={user?.name} src={user?.avatar} size="sm" />
               <div className="hidden text-left sm:block">
                 <p className="text-sm font-medium leading-none text-foreground">{user?.name}</p>

@@ -45,11 +45,11 @@ export function LoginPage() {
     <div className="flex min-h-screen">
       {/* Brand panel */}
       <div className="relative hidden w-1/2 flex-col justify-between overflow-hidden bg-sidebar p-12 text-white lg:flex">
-        <div className="absolute -right-24 -top-24 h-96 w-96 rounded-full bg-blue-500/10 blur-3xl" />
-        <div className="absolute -bottom-32 -left-20 h-96 w-96 rounded-full bg-blue-600/10 blur-3xl" />
+        <div className="absolute -right-24 -top-24 h-96 w-96 rounded-full bg-primary/15 blur-3xl" />
+        <div className="absolute -bottom-32 -left-20 h-96 w-96 rounded-full bg-primary/10 blur-3xl" />
 
         <div className="relative flex items-center gap-3">
-          <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-info">
+          <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary">
             <svg viewBox="0 0 24 24" className="h-6 w-6 text-white" fill="none">
               <path d="M5 13l4 4L19 7" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
@@ -107,12 +107,12 @@ export function LoginPage() {
         >
           <div className="mb-8 lg:hidden">
             <div className="flex items-center gap-2.5">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-info">
-                <svg viewBox="0 0 24 24" className="h-5 w-5 text-white" fill="none">
-                  <path d="M5 13l4 4L19 7" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              </div>
-              <span className="font-display text-lg font-bold">Talent Sphere</span>
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary">
+              <svg viewBox="0 0 24 24" className="h-5 w-5 text-white" fill="none">
+                <path d="M5 13l4 4L19 7" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </div>
+            <span className="font-display text-lg font-bold">Talent Sphere</span>
             </div>
           </div>
 

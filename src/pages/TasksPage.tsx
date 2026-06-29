@@ -113,7 +113,7 @@ export function TasksPage() {
           {tasks.map((t, i) => <TaskCard key={t._id} task={t} index={i} />)}
         </div>
       ) : (
-        <div className="overflow-hidden rounded-xl border border-border bg-surface shadow-soft">
+        <div className="overflow-hidden rounded-2xl border border-border bg-surface shadow-card">
           <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>

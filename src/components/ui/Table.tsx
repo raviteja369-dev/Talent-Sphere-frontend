@@ -24,7 +24,7 @@ export function SortHeader({
   return (
     <th className={cn('px-4 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground', align === 'right' && 'text-right', align === 'center' && 'text-center', className)}>
       {sortable ? (
-        <button onClick={() => onSort!(columnKey!)} className={cn('inline-flex items-center gap-1.5 transition-colors hover:text-foreground', active && 'text-foreground')}>
+        <button onClick={() => onSort!(columnKey!)} className={cn('inline-flex items-center gap-1.5 transition-colors hover:text-foreground', active && 'text-foreground', align === 'right' && 'flex-row-reverse')}>
           {label}
           {active ? (
             dir === 'asc' ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />
@@ -72,7 +72,7 @@ export function Pagination({
         <button
           onClick={() => onPage(page - 1)}
           disabled={page <= 1}
-          className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-border text-muted-foreground transition-colors hover:bg-muted disabled:opacity-40 disabled:hover:bg-transparent"
+          className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-border text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:opacity-40 disabled:hover:bg-transparent"
         >
           <ChevronLeft className="h-4 w-4" />
         </button>
@@ -82,8 +82,8 @@ export function Pagination({
             key={p}
             onClick={() => onPage(p)}
             className={cn(
-              'inline-flex h-8 min-w-8 items-center justify-center rounded-lg border px-2 text-sm font-medium transition-colors',
-              p === page ? 'border-primary bg-primary text-primary-foreground' : 'border-border text-foreground hover:bg-muted'
+              'inline-flex h-8 min-w-8 items-center justify-center rounded-lg border px-2 text-sm font-medium transition-all',
+              p === page ? 'border-primary bg-primary text-primary-foreground shadow-soft' : 'border-border text-foreground hover:bg-muted'
             )}
           >
             {p}
@@ -93,7 +93,7 @@ export function Pagination({
         <button
           onClick={() => onPage(page + 1)}
           disabled={page >= totalPages}
-          className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-border text-muted-foreground transition-colors hover:bg-muted disabled:opacity-40 disabled:hover:bg-transparent"
+          className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-border text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:opacity-40 disabled:hover:bg-transparent"
         >
           <ChevronRight className="h-4 w-4" />
         </button>
