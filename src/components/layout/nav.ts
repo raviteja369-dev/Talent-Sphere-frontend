@@ -1,6 +1,6 @@
 import {
   LayoutDashboard, CheckSquare, FolderKanban, Users, Building2,
-  BarChart3, Bell, Activity, UserCog, type LucideIcon,
+  BarChart3, Bell, Activity, UserCog, ClipboardCheck, type LucideIcon,
 } from 'lucide-react';
 import type { Role } from '@/lib/types';
 
@@ -22,6 +22,7 @@ export const NAV_SECTIONS: NavSection[] = [
     items: [
       { label: 'Dashboard', to: '/', icon: LayoutDashboard, roles: ['admin', 'manager', 'employee'] },
       { label: 'Tasks', to: '/tasks', icon: CheckSquare, roles: ['admin', 'manager', 'employee'] },
+      { label: 'Reviews', to: '/reviews', icon: ClipboardCheck, roles: ['admin', 'manager'] },
       { label: 'Projects', to: '/projects', icon: FolderKanban, roles: ['admin', 'manager'] },
     ],
   },

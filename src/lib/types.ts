@@ -106,6 +106,12 @@ export interface AcceptanceCriterion {
   acknowledged: boolean;
 }
 
+export interface ReviewChecklistItem {
+  _id: string;
+  text: string;
+  done: boolean;
+}
+
 export interface Review {
   status: 'pending' | 'approved' | 'rejected';
   comment?: string;
@@ -140,6 +146,8 @@ export interface Task {
   comments: Comment[];
   managerReview?: Review;
   adminReview?: Review;
+  managerChecklist?: ReviewChecklistItem[];
+  adminChecklist?: ReviewChecklistItem[];
   accepted?: boolean;
   declineReason?: string;
   isDraft?: boolean;

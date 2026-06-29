@@ -65,6 +65,7 @@ export function useTaskMutations() {
     adminReview: useMutation({ mutationFn: ({ id, decision, comment }: { id: string; decision: string; comment?: string }) => api.patch(`/tasks/${id}/admin-review`, { decision, comment }), onSuccess: invalidate }),
     comment: useMutation({ mutationFn: ({ id, text, mentions }: { id: string; text: string; mentions?: string[] }) => api.post(`/tasks/${id}/comments`, { text, mentions }), onSuccess: invalidate }),
     toggleChecklist: useMutation({ mutationFn: ({ id, itemId }: { id: string; itemId: string }) => api.patch(`/tasks/${id}/checklist/${itemId}`), onSuccess: invalidate }),
+    toggleReviewItem: useMutation({ mutationFn: ({ id, scope, itemId }: { id: string; scope: 'manager' | 'admin'; itemId: string }) => api.patch(`/tasks/${id}/review-checklist/${scope}/${itemId}`), onSuccess: invalidate }),
     upload: useMutation({
       mutationFn: ({ id, file }: { id: string; file: File }) => {
         const fd = new FormData();

@@ -10,6 +10,7 @@ import { ResetPasswordPage } from './pages/auth/ResetPasswordPage';
 import { DashboardPage } from './pages/DashboardPage';
 import { TasksPage } from './pages/TasksPage';
 import { TaskDetailPage } from './pages/TaskDetailPage';
+import { ReviewsPage } from './pages/ReviewsPage';
 import { ProjectsPage } from './pages/ProjectsPage';
 import { ProjectDetailPage } from './pages/ProjectDetailPage';
 import { PeoplePage } from './pages/PeoplePage';
@@ -58,6 +59,7 @@ export default function App() {
         <Route index element={<DashboardPage />} />
         <Route path="/tasks" element={<TasksPage />} />
         <Route path="/tasks/:id" element={<TaskDetailPage />} />
+        <Route path="/reviews" element={<Protected roles={['admin', 'manager']}><ReviewsPage /></Protected>} />
         <Route path="/projects" element={<Protected roles={['admin', 'manager']}><ProjectsPage /></Protected>} />
         <Route path="/projects/:id" element={<Protected roles={['admin', 'manager']}><ProjectDetailPage /></Protected>} />
         <Route path="/people" element={<Protected roles={['admin']}><PeoplePage /></Protected>} />

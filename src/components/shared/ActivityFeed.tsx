@@ -1,7 +1,8 @@
 import { motion } from 'framer-motion';
 import {
   UserPlus, FolderPlus, CheckCircle2, XCircle, MessageSquare,
-  Upload, TrendingUp, Send, ClipboardCheck, type LucideIcon,
+  Upload, TrendingUp, Send, ClipboardCheck, ListChecks, Play, Hand,
+  FolderCheck, type LucideIcon,
 } from 'lucide-react';
 import type { Activity } from '@/lib/types';
 import { Avatar } from '@/components/ui/Avatar';
@@ -10,8 +11,12 @@ import { timeAgo } from '@/lib/utils';
 const ICONS: Record<string, { icon: LucideIcon; tone: string }> = {
   task_assigned: { icon: UserPlus, tone: 'bg-blue-500/10 text-blue-500' },
   task_accepted: { icon: ClipboardCheck, tone: 'bg-indigo-500/10 text-indigo-500' },
+  task_declined: { icon: Hand, tone: 'bg-rose-500/10 text-rose-500' },
+  task_started: { icon: Play, tone: 'bg-blue-500/10 text-blue-500' },
+  checklist_updated: { icon: ListChecks, tone: 'bg-sky-500/10 text-sky-500' },
   project_created: { icon: FolderPlus, tone: 'bg-violet-500/10 text-violet-500' },
   project_assigned: { icon: Send, tone: 'bg-violet-500/10 text-violet-500' },
+  project_completed: { icon: FolderCheck, tone: 'bg-emerald-500/10 text-emerald-500' },
   progress_updated: { icon: TrendingUp, tone: 'bg-amber-500/10 text-amber-500' },
   task_submitted: { icon: Send, tone: 'bg-amber-500/10 text-amber-500' },
   manager_approved: { icon: CheckCircle2, tone: 'bg-teal-500/10 text-teal-500' },

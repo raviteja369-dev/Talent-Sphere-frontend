@@ -46,7 +46,7 @@ export function TaskDetailPage() {
   const fileRef = useRef<HTMLInputElement>(null);
 
   const [comment, setComment] = useState('');
-  const [review, setReview] = useState<{ type: 'manager' | 'admin'; decision: 'approve' | 'reject' } | null>(null);
+  const [review, setReview] = useState<{ type: 'manager' | 'admin'; decision: 'approve' | 'changes' | 'reject' } | null>(null);
   const [reviewComment, setReviewComment] = useState('');
   const [subtaskOpen, setSubtaskOpen] = useState(false);
   const [dragOver, setDragOver] = useState(false);
@@ -75,6 +75,10 @@ export function TaskDetailPage() {
 
   const canManagerReview = isManager && task.status === 'submitted_for_review';
   const canAdminReview = isAdmin && task.status === 'sent_to_admin';
+  const managerChecklist = task.managerChecklist ?? [];
+  const adminChecklist = task.adminChecklist ?? [];
+  const managerChecklistDone = managerChecklist.length > 0 && managerChecklist.every((c) => c.done);
+  const adminChecklistDone = adminChecklist.length > 0 && adminChecklist.every((c) => c.done);
   // The assignee can work unless the task is in a review/terminal state.
   const inReviewOrDone = ['completed', 'sent_to_admin', 'manager_approved', 'submitted_for_review'].includes(task.status);
   const canWork = (isEmployee || isAdmin) && isAssignee && !inReviewOrDone;
@@ -195,14 +199,32 @@ export function TaskDetailPage() {
 
   const submitReview = async () => {
     if (!review) return;
+    if (review.decision !== 'approve' && !reviewComment.trim()) return toast.error('A comment is required');
     try {
       const payload = { id: task._id, decision: review.decision, comment: reviewComment };
       if (review.type === 'manager') await m.managerReview.mutateAsync(payload);
       else await m.adminReview.mutateAsync(payload);
-      toast.success(review.decision === 'approve' ? 'Work approved' : 'Changes requested');
+      const msg = review.decision === 'approve'
+        ? (review.type === 'manager' ? 'Approved & sent to Admin' : 'Final approval granted — task completed')
+        : review.decision === 'reject' ? 'Submission rejected' : 'Changes requested';
+      toast.success(msg);
       setReview(null); setReviewComment('');
-    } catch (e) { toast.error(apiError(e)); }
+    } catch (e) {
+      const errs = apiErrors(e);
+      if (errs.length) errs.forEach((msg) => toast.error(msg));
+      else toast.error(apiError(e));
+    }
   };
+
+  const handleSaveChanges = async () => {
+    try {
+      await m.progress.mutateAsync({ id: task._id, progress: task.progress, isDraft: true });
+      toast.success('Changes saved');
+    } catch (e) { toast.error(apiError(e, 'Could not save changes')); }
+  };
+
+  const toggleReviewItem = (scope: 'manager' | 'admin', itemId: string) =>
+    m.toggleReviewItem.mutate({ id: task._id, scope, itemId });
 
   return (
     <div>
@@ -324,8 +346,8 @@ export function TaskDetailPage() {
                       ))}
                     </div>
                     <div className="mt-3 flex flex-wrap items-center gap-2">
-                      <Button variant="outline" size="sm" onClick={() => m.progress.mutate({ id: task._id, progress: task.progress, isDraft: true })}>
-                        <Save className="h-4 w-4" /> Save Draft
+                      <Button variant="outline" size="sm" onClick={handleSaveChanges} loading={m.progress.isPending}>
+                        <Save className="h-4 w-4" /> Save Changes
                       </Button>
                       {isWorking && (
                         <Button variant="outline" size="sm" onClick={handlePause} loading={m.pause.isPending}><Pause className="h-4 w-4" /> Pause</Button>
@@ -346,17 +368,43 @@ export function TaskDetailPage() {
 
             {/* Manager review actions */}
             {canManagerReview && (
-              <div className="mt-5 flex gap-2 border-t border-border pt-5">
-                <Button variant="success" onClick={() => setReview({ type: 'manager', decision: 'approve' })}><Check className="h-4 w-4" /> Approve & Send to Admin</Button>
-                <Button variant="danger" onClick={() => setReview({ type: 'manager', decision: 'reject' })}><X className="h-4 w-4" /> Request Changes</Button>
+              <div className="mt-5 border-t border-border pt-5">
+                <ReviewChecklist
+                  title="Review Checklist"
+                  items={managerChecklist}
+                  onToggle={(itemId) => toggleReviewItem('manager', itemId)}
+                />
+                {!managerChecklistDone && (
+                  <p className="mb-3 text-xs text-muted-foreground">Complete every review item to enable approval.</p>
+                )}
+                <div className="flex flex-wrap gap-2">
+                  <Button variant="success" onClick={() => setReview({ type: 'manager', decision: 'approve' })} disabled={!managerChecklistDone} title={managerChecklistDone ? 'Approve & send to Admin' : 'Complete the review checklist first'}>
+                    <Check className="h-4 w-4" /> Approve & Send to Admin
+                  </Button>
+                  <Button variant="outline" onClick={() => setReview({ type: 'manager', decision: 'changes' })}><Pencil className="h-4 w-4" /> Request Changes</Button>
+                  <Button variant="danger" onClick={() => setReview({ type: 'manager', decision: 'reject' })}><X className="h-4 w-4" /> Reject</Button>
+                </div>
               </div>
             )}
 
             {/* Admin review actions */}
             {canAdminReview && (
-              <div className="mt-5 flex gap-2 border-t border-border pt-5">
-                <Button variant="success" onClick={() => setReview({ type: 'admin', decision: 'approve' })}><Check className="h-4 w-4" /> Final Approval</Button>
-                <Button variant="danger" onClick={() => setReview({ type: 'admin', decision: 'reject' })}><X className="h-4 w-4" /> Reject (Rework)</Button>
+              <div className="mt-5 border-t border-border pt-5">
+                <ReviewChecklist
+                  title="Final Approval Checklist"
+                  items={adminChecklist}
+                  onToggle={(itemId) => toggleReviewItem('admin', itemId)}
+                />
+                {!adminChecklistDone && (
+                  <p className="mb-3 text-xs text-muted-foreground">Complete every item to enable final approval.</p>
+                )}
+                <div className="flex flex-wrap gap-2">
+                  <Button variant="success" onClick={() => setReview({ type: 'admin', decision: 'approve' })} disabled={!adminChecklistDone} title={adminChecklistDone ? 'Grant final approval' : 'Complete the checklist first'}>
+                    <Check className="h-4 w-4" /> Final Approval
+                  </Button>
+                  <Button variant="outline" onClick={() => setReview({ type: 'admin', decision: 'changes' })}><Pencil className="h-4 w-4" /> Request Changes</Button>
+                  <Button variant="danger" onClick={() => setReview({ type: 'admin', decision: 'reject' })}><X className="h-4 w-4" /> Reject (Rework)</Button>
+                </div>
               </div>
             )}
           </Card>
@@ -416,13 +464,13 @@ export function TaskDetailPage() {
           {(task.checklist?.length > 0 || canEditTask) && (
             <Card>
               <CardHeader title={<span className="flex items-center gap-2"><ListChecks className="h-4 w-4" /> Checklist</span>}
-                subtitle={task.checklist?.length ? `${task.checklist.filter((c) => c.done).length} of ${task.checklist.length} complete` : 'No items yet'} />
+                subtitle={task.checklist?.length ? `${task.checklist.filter((c) => c.done).length} of ${task.checklist.length} complete · ${Math.round((task.checklist.filter((c) => c.done).length / task.checklist.length) * 100)}%` : 'No items yet'} />
               <div className="divide-y divide-border">
                 {task.checklist.map((item) => (
                   <div key={item._id} className="group flex items-center gap-3 px-5 py-3 transition-colors hover:bg-muted/40">
                     <button
-                      onClick={() => isAssignee && m.toggleChecklist.mutate({ id: task._id, itemId: item._id })}
-                      disabled={!isAssignee}
+                      onClick={() => canWork && m.toggleChecklist.mutate({ id: task._id, itemId: item._id })}
+                      disabled={!canWork}
                       className="flex flex-1 items-center gap-3 text-left disabled:cursor-default"
                     >
                       <span className={cn('flex h-5 w-5 shrink-0 items-center justify-center rounded-md border', item.done ? 'border-emerald-500 bg-emerald-500 text-white' : 'border-border')}>
@@ -559,13 +607,19 @@ export function TaskDetailPage() {
       <Modal
         open={!!review}
         onClose={() => setReview(null)}
-        title={review?.decision === 'approve' ? 'Approve Work' : 'Request Changes'}
-        description={review?.decision === 'approve' ? 'Confirm approval and add an optional note.' : 'Let the assignee know what needs to change.'}
+        title={review?.decision === 'approve' ? 'Approve Work' : review?.decision === 'reject' ? 'Reject Submission' : 'Request Changes'}
+        description={
+          review?.decision === 'approve'
+            ? 'Confirm approval and add an optional note.'
+            : review?.decision === 'reject'
+            ? 'Explain why this submission is being rejected. A comment is required.'
+            : 'Let the assignee know what needs to change. A comment is required.'
+        }
         footer={
           <>
             <Button variant="outline" onClick={() => setReview(null)}>Cancel</Button>
             <Button variant={review?.decision === 'approve' ? 'success' : 'danger'} onClick={submitReview} loading={m.managerReview.isPending || m.adminReview.isPending}>
-              {review?.decision === 'approve' ? 'Approve' : 'Request Changes'}
+              {review?.decision === 'approve' ? 'Approve' : review?.decision === 'reject' ? 'Reject' : 'Request Changes'}
             </Button>
           </>
         }
@@ -574,6 +628,7 @@ export function TaskDetailPage() {
           value={reviewComment}
           onChange={(e) => setReviewComment(e.target.value)}
           placeholder={review?.decision === 'approve' ? 'Optional note…' : 'Describe the required changes…'}
+          autoFocus
         />
       </Modal>
 
@@ -631,6 +686,30 @@ function Meta({ label, value, avatar, icon, danger }: { label: string; value?: s
         {avatar && <Avatar name={avatar} size="xs" />}
         {icon}
         <span>{value || '—'}</span>
+      </div>
+    </div>
+  );
+}
+
+function ReviewChecklist({ title, items, onToggle }: { title: string; items: { _id: string; text: string; done: boolean }[]; onToggle: (id: string) => void }) {
+  if (!items.length) return null;
+  const done = items.filter((i) => i.done).length;
+  const pct = Math.round((done / items.length) * 100);
+  return (
+    <div className="mb-4 rounded-xl border border-border bg-muted/30 p-4">
+      <div className="mb-2 flex items-center justify-between">
+        <p className="text-sm font-semibold text-foreground">{title}</p>
+        <span className={cn('text-xs font-semibold', pct === 100 ? 'text-emerald-600 dark:text-emerald-400' : 'text-muted-foreground')}>{done}/{items.length} · {pct}%</span>
+      </div>
+      <div className="space-y-1">
+        {items.map((i) => (
+          <button key={i._id} onClick={() => onToggle(i._id)} className="flex w-full items-center gap-3 rounded-lg px-2 py-1.5 text-left transition-colors hover:bg-muted/60">
+            <span className={cn('flex h-5 w-5 shrink-0 items-center justify-center rounded-md border', i.done ? 'border-emerald-500 bg-emerald-500 text-white' : 'border-border')}>
+              {i.done && <Check className="h-3.5 w-3.5" />}
+            </span>
+            <span className={cn('text-sm', i.done ? 'text-foreground' : 'text-muted-foreground')}>{i.text}</span>
+          </button>
+        ))}
       </div>
     </div>
   );

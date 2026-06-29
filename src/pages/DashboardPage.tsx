@@ -143,7 +143,7 @@ function AdminDashboard({ stats, departments }: { stats: any; departments: any[]
         <StatCard label="Total Projects" value={stats.totalProjects} icon={FolderKanban} tone="sky" hint="In flight org-wide" delay={0.1} />
         <StatCard label="Active Tasks" value={stats.activeTasks} icon={ListChecks} tone="orange" hint="Currently in progress" delay={0.15} />
         <StatCard label="Completed Tasks" value={stats.completedTasks} icon={CheckCircle2} tone="emerald" hint="Signed off & closed" delay={0.2} />
-        <StatCard label="Pending Approvals" value={stats.pendingApprovals} icon={Hourglass} tone="amber" hint="Awaiting review" delay={0.25} />
+        <Link to="/reviews"><StatCard label="Pending Approvals" value={stats.pendingApprovals} icon={Hourglass} tone="amber" hint="Awaiting your final approval" delay={0.25} /></Link>
         <StatCard label="Delayed Tasks" value={stats.delayedTasks} icon={Clock} tone="gray" hint="Behind schedule" delay={0.3} />
         <StatCard label="Overdue Tasks" value={stats.overdueTasks} icon={AlertTriangle} tone="rose" hint="Past their due date" delay={0.35} />
       </div>
@@ -186,7 +186,7 @@ function ManagerStats({ stats }: { stats: any }) {
       <StatCard label="Assigned Projects" value={stats.assignedProjects} icon={FolderKanban} tone="blue" hint="You're managing" />
       <StatCard label="Assigned Tasks" value={stats.assignedTasks} icon={ListChecks} tone="sky" hint="Across your team" delay={0.05} />
       <StatCard label="Team Members" value={stats.teamMembers} icon={Users} tone="purple" hint="Direct reports" delay={0.1} />
-      <StatCard label="Pending Reviews" value={stats.pendingReviews} icon={ClipboardCheck} tone="amber" hint="Awaiting your sign-off" delay={0.15} />
+      <Link to="/reviews"><StatCard label="Pending Reviews" value={stats.pendingReviews} icon={ClipboardCheck} tone="amber" hint="Awaiting your sign-off" delay={0.15} /></Link>
       <StatCard label="My Admin Tasks" value={stats.myAdminTasks} icon={Inbox} tone="orange" hint="Escalated to admin" delay={0.2} />
       <StatCard label="Completed Reviews" value={stats.completedReviews} icon={CheckCircle2} tone="emerald" hint="Approved this cycle" delay={0.25} />
       <StatCard label="Overdue (Team)" value={stats.overdueTasks} icon={AlertTriangle} tone="rose" hint="Need attention" delay={0.3} />
