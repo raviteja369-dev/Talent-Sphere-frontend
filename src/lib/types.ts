@@ -5,7 +5,10 @@ export type Priority = 'low' | 'medium' | 'high' | 'critical';
 export type TaskStatus =
   | 'not_started'
   | 'assigned'
+  | 'accepted'
+  | 'declined'
   | 'in_progress'
+  | 'paused'
   | 'submitted_for_review'
   | 'manager_approved'
   | 'manager_rejected'
@@ -38,21 +41,38 @@ export interface Department {
   head?: User;
 }
 
+export interface Milestone {
+  _id?: string;
+  title: string;
+  date?: string;
+  done?: boolean;
+}
+
 export interface Project {
   _id: string;
   name: string;
   key?: string;
+  clientName?: string;
   description?: string;
+  goals?: string[];
+  milestones?: Milestone[];
   department?: Department;
   manager?: User;
   priority: Priority;
   status: string;
+  budget?: number;
   startDate?: string;
   dueDate?: string;
+  timeline?: string;
   progress: number;
   color: string;
+  completedAt?: string;
   taskCount?: number;
   completedCount?: number;
+  // Present on the rich project-detail endpoint
+  tasks?: Task[];
+  team?: User[];
+  stats?: { total: number; completed: number; inReview: number; overdue: number; progress: number };
 }
 
 export interface Comment {
@@ -77,6 +97,13 @@ export interface ChecklistItem {
   _id: string;
   text: string;
   done: boolean;
+  required?: boolean;
+}
+
+export interface AcceptanceCriterion {
+  _id: string;
+  text: string;
+  acknowledged: boolean;
 }
 
 export interface Review {
@@ -89,26 +116,37 @@ export interface Review {
 export interface Task {
   _id: string;
   title: string;
+  taskCode?: string;
   description?: string;
   project?: Project;
   department?: Department;
   type: 'admin_task' | 'subtask';
   parentTask?: Task | string;
+  dependencies?: Task[];
   assignedTo?: User;
   assignedBy?: User;
+  reviewer?: User;
   priority: Priority;
   status: TaskStatus;
   progress: number;
   startDate?: string;
   dueDate?: string;
+  estimatedHours?: number;
   instructions?: string;
+  tags?: string[];
   checklist: ChecklistItem[];
+  acceptanceCriteria?: AcceptanceCriterion[];
   attachments: Attachment[];
   comments: Comment[];
   managerReview?: Review;
   adminReview?: Review;
   accepted?: boolean;
+  declineReason?: string;
   isDraft?: boolean;
+  locked?: boolean;
+  completedAt?: string;
+  timeWorked?: number;
+  timerStartedAt?: string | null;
   subtasks?: Task[];
   createdAt: string;
   updatedAt: string;

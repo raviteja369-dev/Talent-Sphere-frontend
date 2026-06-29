@@ -41,7 +41,10 @@ export function useTaskMutations() {
   const invalidate = () => {
     qc.invalidateQueries({ queryKey: ['tasks'] });
     qc.invalidateQueries({ queryKey: ['task'] });
+    qc.invalidateQueries({ queryKey: ['projects'] });
+    qc.invalidateQueries({ queryKey: ['project'] });
     qc.invalidateQueries({ queryKey: ['dashboard'] });
+    qc.invalidateQueries({ queryKey: ['analytics'] });
     qc.invalidateQueries({ queryKey: ['notifications'] });
     qc.invalidateQueries({ queryKey: ['activity'] });
   };
@@ -51,8 +54,13 @@ export function useTaskMutations() {
     update: useMutation({ mutationFn: ({ id, body }: { id: string; body: Partial<Task> }) => api.put(`/tasks/${id}`, body), onSuccess: invalidate }),
     remove: useMutation({ mutationFn: (id: string) => api.delete(`/tasks/${id}`), onSuccess: invalidate }),
     accept: useMutation({ mutationFn: (id: string) => api.patch(`/tasks/${id}/accept`), onSuccess: invalidate }),
+    decline: useMutation({ mutationFn: ({ id, reason }: { id: string; reason: string }) => api.patch(`/tasks/${id}/decline`, { reason }), onSuccess: invalidate }),
+    start: useMutation({ mutationFn: (id: string) => api.patch(`/tasks/${id}/start`), onSuccess: invalidate }),
+    pause: useMutation({ mutationFn: (id: string) => api.patch(`/tasks/${id}/pause`), onSuccess: invalidate }),
+    resume: useMutation({ mutationFn: (id: string) => api.patch(`/tasks/${id}/resume`), onSuccess: invalidate }),
     progress: useMutation({ mutationFn: ({ id, progress, isDraft }: { id: string; progress: number; isDraft?: boolean }) => api.patch(`/tasks/${id}/progress`, { progress, isDraft }), onSuccess: invalidate }),
     submit: useMutation({ mutationFn: (id: string) => api.patch(`/tasks/${id}/submit`), onSuccess: invalidate }),
+    acknowledgeCriterion: useMutation({ mutationFn: ({ id, critId }: { id: string; critId: string }) => api.patch(`/tasks/${id}/criteria/${critId}`), onSuccess: invalidate }),
     managerReview: useMutation({ mutationFn: ({ id, decision, comment }: { id: string; decision: string; comment?: string }) => api.patch(`/tasks/${id}/manager-review`, { decision, comment }), onSuccess: invalidate }),
     adminReview: useMutation({ mutationFn: ({ id, decision, comment }: { id: string; decision: string; comment?: string }) => api.patch(`/tasks/${id}/admin-review`, { decision, comment }), onSuccess: invalidate }),
     comment: useMutation({ mutationFn: ({ id, text, mentions }: { id: string; text: string; mentions?: string[] }) => api.post(`/tasks/${id}/comments`, { text, mentions }), onSuccess: invalidate }),
@@ -77,11 +85,22 @@ export function useProjects(params: Record<string, string | undefined> = {}) {
   });
 }
 
+export function useProject(id?: string) {
+  return useQuery({
+    queryKey: ['project', id],
+    queryFn: async () => (await api.get<Project>(`/projects/${id}`)).data,
+    enabled: !!id,
+  });
+}
+
 export function useProjectMutations() {
   const qc = useQueryClient();
   const invalidate = () => {
     qc.invalidateQueries({ queryKey: ['projects'] });
+    qc.invalidateQueries({ queryKey: ['project'] });
     qc.invalidateQueries({ queryKey: ['dashboard'] });
+    qc.invalidateQueries({ queryKey: ['notifications'] });
+    qc.invalidateQueries({ queryKey: ['activity'] });
   };
   return {
     create: useMutation({ mutationFn: (body: Partial<Project>) => api.post('/projects', body), onSuccess: invalidate }),

@@ -25,23 +25,37 @@ export function TaskFormModal({
   // Admin assigns to managers; manager assigns to their employees
   const { data: assignees } = useUsers({ role: user?.role === 'admin' ? 'manager' : 'employee' });
 
-  const [form, setForm] = useState({
+  const EMPTY = {
     title: '', description: '', project: defaultProject || '', assignedTo: '',
     priority: 'medium', startDate: '', dueDate: '', instructions: '',
-  });
+    estimatedHours: '', tags: '', checklist: '', acceptanceCriteria: '',
+  };
+  const [form, setForm] = useState(EMPTY);
   const set = (k: string, v: string) => setForm((f) => ({ ...f, [k]: v }));
+
+  const linesToList = (v: string) => v.split('\n').map((l) => l.trim()).filter(Boolean);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.title || !form.assignedTo) return toast.error('Title and assignee are required');
     try {
       await create.mutateAsync({
-        ...form,
+        title: form.title,
+        description: form.description,
+        assignedTo: form.assignedTo,
+        priority: form.priority,
+        startDate: form.startDate || undefined,
+        dueDate: form.dueDate || undefined,
+        instructions: form.instructions,
+        estimatedHours: Number(form.estimatedHours) || 0,
+        tags: form.tags ? form.tags.split(',').map((t) => t.trim()).filter(Boolean) : [],
+        checklist: linesToList(form.checklist).map((text) => ({ text, required: true })),
+        acceptanceCriteria: linesToList(form.acceptanceCriteria).map((text) => ({ text })),
         parentTask: parentTaskId,
         project: form.project || undefined,
       } as any);
       toast.success('Task assigned successfully');
-      setForm({ title: '', description: '', project: '', assignedTo: '', priority: 'medium', startDate: '', dueDate: '', instructions: '' });
+      setForm(EMPTY);
       onClose();
     } catch (err) {
       toast.error(apiError(err, 'Could not create task'));
@@ -85,11 +99,14 @@ export function TaskFormModal({
             </Select>
           </FieldGroup>
         </div>
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-4">
           <FieldGroup label="Priority">
             <Select value={form.priority} onChange={(e) => set('priority', e.target.value)}>
               {PRIORITIES.map((p) => <option key={p} value={p} className="capitalize">{p}</option>)}
             </Select>
+          </FieldGroup>
+          <FieldGroup label="Est. hours">
+            <Input type="number" min="0" value={form.estimatedHours} onChange={(e) => set('estimatedHours', e.target.value)} placeholder="0" />
           </FieldGroup>
           <FieldGroup label="Start date">
             <Input type="date" value={form.startDate} onChange={(e) => set('startDate', e.target.value)} />
@@ -98,9 +115,20 @@ export function TaskFormModal({
             <Input type="date" value={form.dueDate} onChange={(e) => set('dueDate', e.target.value)} />
           </FieldGroup>
         </div>
-        <FieldGroup label="Instructions">
-          <Textarea value={form.instructions} onChange={(e) => set('instructions', e.target.value)} placeholder="Add detailed instructions, acceptance criteria…" className="min-h-[70px]" />
+        <FieldGroup label="Tags" hint="Comma separated">
+          <Input value={form.tags} onChange={(e) => set('tags', e.target.value)} placeholder="frontend, urgent, design" />
         </FieldGroup>
+        <FieldGroup label="Instructions">
+          <Textarea value={form.instructions} onChange={(e) => set('instructions', e.target.value)} placeholder="Add detailed instructions…" className="min-h-[60px]" />
+        </FieldGroup>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <FieldGroup label="Checklist" hint="One mandatory item per line">
+            <Textarea value={form.checklist} onChange={(e) => set('checklist', e.target.value)} placeholder={'Write unit tests\nUpdate documentation'} className="min-h-[80px]" />
+          </FieldGroup>
+          <FieldGroup label="Acceptance criteria" hint="One per line">
+            <Textarea value={form.acceptanceCriteria} onChange={(e) => set('acceptanceCriteria', e.target.value)} placeholder={'Meets design spec\nNo console errors'} className="min-h-[80px]" />
+          </FieldGroup>
+        </div>
       </form>
     </Modal>
   );

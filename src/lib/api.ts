@@ -36,3 +36,12 @@ export function apiError(err: unknown, fallback = 'Something went wrong') {
   }
   return fallback;
 }
+
+/** Returns a server-provided validation error list (e.g. submit gating), if any. */
+export function apiErrors(err: unknown): string[] {
+  if (axios.isAxiosError(err)) {
+    const data = err.response?.data;
+    if (Array.isArray(data?.errors)) return data.errors as string[];
+  }
+  return [];
+}

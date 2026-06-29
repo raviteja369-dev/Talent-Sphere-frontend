@@ -21,7 +21,10 @@ const SOFT = {
 export const STATUS_CONFIG: Record<TaskStatus, BadgeStyle> = {
   not_started: { label: 'Not Started', className: SOFT.gray, dot: 'bg-gray-400' },
   assigned: { label: 'Assigned', className: SOFT.blue, dot: 'bg-blue-500' },
+  accepted: { label: 'Accepted', className: SOFT.blue, dot: 'bg-blue-500' },
+  declined: { label: 'Declined', className: SOFT.red, dot: 'bg-red-500' },
   in_progress: { label: 'In Progress', className: SOFT.blue, dot: 'bg-blue-600' },
+  paused: { label: 'Paused', className: SOFT.amber, dot: 'bg-amber-500' },
   submitted_for_review: { label: 'Submitted for Review', className: SOFT.amber, dot: 'bg-amber-500' },
   manager_approved: { label: 'Manager Approved', className: SOFT.green, dot: 'bg-green-500' },
   manager_rejected: { label: 'Manager Rejected', className: SOFT.red, dot: 'bg-red-500' },

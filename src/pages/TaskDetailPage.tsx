@@ -2,8 +2,9 @@ import { useState, useRef } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import {
-  ArrowLeft, Calendar, Paperclip, Send, Check, X, Play, Save,
+  ArrowLeft, Calendar, Paperclip, Send, Check, X, Play, Pause, Save,
   Upload, MessageSquare, Trash2, FileText, ListChecks, Plus, Download, Pencil,
+  Clock, Hand, ShieldCheck, Hash, GitBranch, Timer,
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTask, useTaskMutations, useActivity } from '@/hooks/queries';
@@ -11,7 +12,7 @@ import { Button } from '@/components/ui/Button';
 import { Input, Textarea, Select, FieldGroup } from '@/components/ui/Field';
 import { PRIORITIES } from '@/lib/constants';
 import { Card, CardHeader } from '@/components/ui/Card';
-import { StatusBadge, PriorityBadge } from '@/components/ui/Badge';
+import { StatusBadge, PriorityBadge, Badge } from '@/components/ui/Badge';
 import { ProgressBar } from '@/components/ui/Progress';
 import { Avatar } from '@/components/ui/Avatar';
 import { Modal } from '@/components/ui/Modal';
@@ -21,11 +22,19 @@ import { WorkflowStepper } from '@/components/shared/WorkflowStepper';
 import { TaskFormModal } from '@/components/shared/TaskFormModal';
 import { ActivityFeed } from '@/components/shared/ActivityFeed';
 import { TaskCard } from '@/components/shared/TaskCard';
-import { cn, formatDate, formatDateTime, timeAgo, isOverdue } from '@/lib/utils';
+import { cn, formatDate, timeAgo, isOverdue } from '@/lib/utils';
 import { progressColor } from '@/lib/constants';
-import { apiError } from '@/lib/api';
+import { apiError, apiErrors } from '@/lib/api';
 
 const PROGRESS_STEPS = [0, 30, 60, 90, 100];
+
+function formatDuration(minutes?: number) {
+  const m = Math.max(0, Math.round(minutes || 0));
+  if (m < 60) return `${m}m`;
+  const h = Math.floor(m / 60);
+  const rem = m % 60;
+  return rem ? `${h}h ${rem}m` : `${h}h`;
+}
 
 export function TaskDetailPage() {
   const { id } = useParams();
@@ -44,6 +53,8 @@ export function TaskDetailPage() {
   const [editOpen, setEditOpen] = useState(false);
   const [editForm, setEditForm] = useState({ title: '', description: '', priority: 'medium', startDate: '', dueDate: '', instructions: '' });
   const [newItem, setNewItem] = useState('');
+  const [declineOpen, setDeclineOpen] = useState(false);
+  const [declineReason, setDeclineReason] = useState('');
 
   if (isLoading) {
     return (
@@ -64,10 +75,28 @@ export function TaskDetailPage() {
 
   const canManagerReview = isManager && task.status === 'submitted_for_review';
   const canAdminReview = isAdmin && task.status === 'sent_to_admin';
-  const canWork = isEmployee && isAssignee && !['completed', 'sent_to_admin', 'manager_approved', 'submitted_for_review'].includes(task.status);
+  // The assignee can work unless the task is in a review/terminal state.
+  const inReviewOrDone = ['completed', 'sent_to_admin', 'manager_approved', 'submitted_for_review'].includes(task.status);
+  const canWork = (isEmployee || isAdmin) && isAssignee && !inReviewOrDone;
   const isCreator = task.assignedBy?._id === user?._id;
-  const canEditTask = isAdmin || (isManager && isCreator);
+  const canEditTask = (isAdmin || (isManager && isCreator)) && !task.locked;
   const fmt = (d?: string) => (d ? new Date(d).toISOString().slice(0, 10) : '');
+
+  const needsAccept = !task.accepted && ['assigned', 'not_started', 'declined'].includes(task.status);
+  const canStart = task.accepted && task.status === 'accepted';
+  const isPaused = task.status === 'paused';
+  const isWorking = task.status === 'in_progress';
+  const isRework = task.status === 'manager_rejected' || task.status === 'admin_rejected';
+  const criteria = task.acceptanceCriteria ?? [];
+  const mandatoryLeft = (task.checklist ?? []).filter((c) => c.required !== false && !c.done).length;
+  const criteriaLeft = criteria.filter((c) => !c.acknowledged).length;
+  const submitBlockers = [
+    task.progress < 100 && 'progress at 100%',
+    mandatoryLeft > 0 && `${mandatoryLeft} checklist item(s)`,
+    (task.attachments?.length ?? 0) === 0 && 'a deliverable',
+    criteriaLeft > 0 && `${criteriaLeft} acceptance criteria`,
+  ].filter(Boolean) as string[];
+  const canSubmit = submitBlockers.length === 0;
 
   const openEdit = () => {
     setEditForm({
@@ -107,19 +136,49 @@ export function TaskDetailPage() {
 
   const setProgress = async (value: number) => {
     try {
-      if (value >= 100) {
-        await m.submit.mutateAsync(task._id);
-        toast.success('Task submitted for manager review');
-      } else {
-        await m.progress.mutateAsync({ id: task._id, progress: value });
-        toast.success(`Progress updated to ${value}%`);
-      }
+      await m.progress.mutateAsync({ id: task._id, progress: value });
+      toast.success(`Progress updated to ${value}%`);
     } catch (e) { toast.error(apiError(e)); }
   };
 
+  const handleSubmit = async () => {
+    try {
+      await m.submit.mutateAsync(task._id);
+      toast.success('Task submitted for manager review');
+    } catch (e) {
+      const errs = apiErrors(e);
+      if (errs.length) errs.forEach((msg) => toast.error(msg));
+      else toast.error(apiError(e, 'Could not submit task'));
+    }
+  };
+
   const handleAccept = async () => {
-    try { await m.accept.mutateAsync(task._id); toast.success('Task accepted — let\'s get to work!'); }
+    try { await m.accept.mutateAsync(task._id); toast.success('Task accepted'); }
     catch (e) { toast.error(apiError(e)); }
+  };
+
+  const handleStart = async () => {
+    try { await m.start.mutateAsync(task._id); toast.success('Timer started — task in progress'); }
+    catch (e) { toast.error(apiError(e)); }
+  };
+
+  const handlePause = async () => {
+    try { await m.pause.mutateAsync(task._id); toast.success('Task paused'); }
+    catch (e) { toast.error(apiError(e)); }
+  };
+
+  const handleResume = async () => {
+    try { await m.resume.mutateAsync(task._id); toast.success('Task resumed'); }
+    catch (e) { toast.error(apiError(e)); }
+  };
+
+  const handleDecline = async () => {
+    if (!declineReason.trim()) return toast.error('Please provide a reason');
+    try {
+      await m.decline.mutateAsync({ id: task._id, reason: declineReason.trim() });
+      toast.success('Task declined — your manager has been notified');
+      setDeclineOpen(false); setDeclineReason('');
+    } catch (e) { toast.error(apiError(e)); }
   };
 
   const handleUpload = async (file?: File) => {
@@ -156,6 +215,11 @@ export function TaskDetailPage() {
         <div className="space-y-6 lg:col-span-2">
           <Card className="p-6">
             <div className="mb-4 flex flex-wrap items-center gap-2">
+              {task.taskCode && (
+                <span className="inline-flex items-center gap-1 rounded-md bg-muted px-2 py-0.5 font-mono text-xs font-semibold text-muted-foreground">
+                  <Hash className="h-3 w-3" />{task.taskCode}
+                </span>
+              )}
               {task.project && (
                 <Link to="/tasks" className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground">
                   <span className="h-2 w-2 rounded-sm" style={{ background: task.project.color }} />
@@ -177,11 +241,19 @@ export function TaskDetailPage() {
             </div>
             {task.description && <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{task.description}</p>}
 
+            {!!task.tags?.length && (
+              <div className="mt-3 flex flex-wrap gap-1.5">
+                {task.tags.map((tag) => <Badge key={tag}>{tag}</Badge>)}
+              </div>
+            )}
+
             <div className="mt-5 grid grid-cols-2 gap-4 border-t border-border pt-5 sm:grid-cols-4">
               <Meta label="Assigned by" value={task.assignedBy?.name} avatar={task.assignedBy?.name} />
               <Meta label="Assigned to" value={task.assignedTo?.name} avatar={task.assignedTo?.name} />
               <Meta label="Start date" value={formatDate(task.startDate)} icon={<Calendar className="h-3.5 w-3.5" />} />
               <Meta label="Due date" value={formatDate(task.dueDate)} icon={<Calendar className="h-3.5 w-3.5" />} danger={overdue} />
+              {!!task.estimatedHours && <Meta label="Estimated" value={`${task.estimatedHours}h`} icon={<Clock className="h-3.5 w-3.5" />} />}
+              <Meta label="Time tracked" value={formatDuration(task.timeWorked)} icon={<Timer className="h-3.5 w-3.5" />} />
             </div>
           </Card>
 
@@ -198,18 +270,50 @@ export function TaskDetailPage() {
 
             {canWork && (
               <div className="mt-5">
-                {!task.accepted && task.status === 'assigned' ? (
-                  <Button onClick={handleAccept} loading={m.accept.isPending}><Play className="h-4 w-4" /> Accept Task</Button>
+                {/* Rework banner */}
+                {isRework && (
+                  <div className="mb-4 rounded-lg border border-red-200 bg-red-50 p-3 dark:border-red-500/20 dark:bg-red-500/10">
+                    <p className="text-sm font-medium text-red-700 dark:text-red-300">Changes requested — please rework and resubmit.</p>
+                    {(task.adminReview?.status === 'rejected' ? task.adminReview?.comment : task.managerReview?.comment) && (
+                      <p className="mt-1 text-sm text-red-600 dark:text-red-400">"{task.adminReview?.status === 'rejected' ? task.adminReview?.comment : task.managerReview?.comment}"</p>
+                    )}
+                  </div>
+                )}
+
+                {needsAccept ? (
+                  <div className="flex flex-wrap gap-2">
+                    <Button onClick={handleAccept} loading={m.accept.isPending}><Check className="h-4 w-4" /> Accept Task</Button>
+                    <Button variant="outline" onClick={() => setDeclineOpen(true)}><Hand className="h-4 w-4" /> Decline</Button>
+                  </div>
+                ) : canStart ? (
+                  <div className="flex flex-wrap gap-2">
+                    <Button onClick={handleStart} loading={m.start.isPending}><Play className="h-4 w-4" /> Start Task</Button>
+                    <Button variant="outline" onClick={() => setDeclineOpen(true)}><Hand className="h-4 w-4" /> Decline</Button>
+                  </div>
+                ) : isPaused ? (
+                  <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 dark:border-amber-500/20 dark:bg-amber-500/10">
+                    <div className="flex items-center justify-between gap-3">
+                      <p className="text-sm font-medium text-amber-700 dark:text-amber-300">Task is paused. Resume to continue tracking time.</p>
+                      <Button size="sm" onClick={handleResume} loading={m.resume.isPending}><Play className="h-4 w-4" /> Resume</Button>
+                    </div>
+                  </div>
                 ) : (
                   <>
-                    <p className="mb-2 text-xs font-medium text-muted-foreground">Update your progress</p>
+                    <div className="mb-2 flex items-center justify-between">
+                      <p className="text-xs font-medium text-muted-foreground">Update your progress</p>
+                      {isWorking && (
+                        <span className="inline-flex items-center gap-1.5 text-xs font-medium text-emerald-600 dark:text-emerald-400">
+                          <span className="h-2 w-2 animate-pulse rounded-full bg-emerald-500" /> Timer running
+                        </span>
+                      )}
+                    </div>
                     <div className="flex flex-wrap gap-2">
                       {PROGRESS_STEPS.map((step) => (
                         <button
                           key={step}
                           onClick={() => setProgress(step)}
                           className={cn(
-                            'flex-1 rounded-lg border px-3 py-2.5 text-sm font-semibold transition-all min-w-[64px]',
+                            'min-w-[64px] flex-1 rounded-lg border px-3 py-2.5 text-sm font-semibold transition-all',
                             task.progress === step
                               ? 'border-primary bg-primary text-primary-foreground shadow-soft'
                               : 'border-border bg-surface text-foreground hover:border-primary hover:bg-accent'
@@ -219,24 +323,24 @@ export function TaskDetailPage() {
                         </button>
                       ))}
                     </div>
-                    <div className="mt-3 flex gap-2">
+                    <div className="mt-3 flex flex-wrap items-center gap-2">
                       <Button variant="outline" size="sm" onClick={() => m.progress.mutate({ id: task._id, progress: task.progress, isDraft: true })}>
                         <Save className="h-4 w-4" /> Save Draft
                       </Button>
-                      {task.progress >= 100 && (
-                        <Button size="sm" onClick={() => setProgress(100)}><Send className="h-4 w-4" /> Submit for Review</Button>
+                      {isWorking && (
+                        <Button variant="outline" size="sm" onClick={handlePause} loading={m.pause.isPending}><Pause className="h-4 w-4" /> Pause</Button>
                       )}
+                      <Button size="sm" onClick={handleSubmit} loading={m.submit.isPending} disabled={!canSubmit} title={canSubmit ? 'Submit for review' : `Still required: ${submitBlockers.join(', ')}`}>
+                        <Send className="h-4 w-4" /> Submit for Review
+                      </Button>
                     </div>
+                    {!canSubmit && (
+                      <p className="mt-2 text-xs text-muted-foreground">
+                        Before submitting: <span className="font-medium text-foreground">{submitBlockers.join(', ')}</span>.
+                      </p>
+                    )}
                   </>
                 )}
-              </div>
-            )}
-
-            {/* Rework banner */}
-            {(task.status === 'manager_rejected' || task.status === 'admin_rejected') && isAssignee && (
-              <div className="mt-4 rounded-lg border border-rose-200 bg-rose-50 p-3 dark:border-rose-500/20 dark:bg-rose-500/10">
-                <p className="text-sm font-medium text-rose-700 dark:text-rose-300">Changes requested — please rework and resubmit.</p>
-                {task.managerReview?.comment && <p className="mt-1 text-sm text-rose-600 dark:text-rose-400">"{task.managerReview.comment}"</p>}
               </div>
             )}
 
@@ -262,6 +366,49 @@ export function TaskDetailPage() {
             <Card>
               <CardHeader title="Instructions" />
               <div className="p-5 text-sm leading-relaxed text-muted-foreground whitespace-pre-wrap">{task.instructions}</div>
+            </Card>
+          )}
+
+          {/* Acceptance criteria */}
+          {criteria.length > 0 && (
+            <Card>
+              <CardHeader
+                title={<span className="flex items-center gap-2"><ShieldCheck className="h-4 w-4" /> Acceptance Criteria</span>}
+                subtitle={`${criteria.filter((c) => c.acknowledged).length} of ${criteria.length} acknowledged`}
+              />
+              <div className="divide-y divide-border">
+                {criteria.map((c) => (
+                  <button
+                    key={c._id}
+                    onClick={() => isAssignee && !inReviewOrDone && m.acknowledgeCriterion.mutate({ id: task._id, critId: c._id })}
+                    disabled={!isAssignee || inReviewOrDone}
+                    className="flex w-full items-center gap-3 px-5 py-3 text-left transition-colors hover:bg-muted/40 disabled:cursor-default disabled:hover:bg-transparent"
+                  >
+                    <span className={cn('flex h-5 w-5 shrink-0 items-center justify-center rounded-full border', c.acknowledged ? 'border-emerald-500 bg-emerald-500 text-white' : 'border-border')}>
+                      {c.acknowledged && <Check className="h-3.5 w-3.5" />}
+                    </span>
+                    <span className={cn('text-sm', c.acknowledged ? 'text-foreground' : 'text-muted-foreground')}>{c.text}</span>
+                  </button>
+                ))}
+              </div>
+            </Card>
+          )}
+
+          {/* Dependencies */}
+          {!!task.dependencies?.length && (
+            <Card>
+              <CardHeader title={<span className="flex items-center gap-2"><GitBranch className="h-4 w-4" /> Dependencies</span>} subtitle="This task depends on" />
+              <div className="divide-y divide-border">
+                {task.dependencies.map((d) => (
+                  <Link key={d._id} to={`/tasks/${d._id}`} className="flex items-center justify-between px-5 py-3 transition-colors hover:bg-muted/40">
+                    <span className="flex items-center gap-2 text-sm text-foreground">
+                      {d.taskCode && <span className="font-mono text-xs text-muted-foreground">{d.taskCode}</span>}
+                      {d.title}
+                    </span>
+                    <StatusBadge status={d.status} />
+                  </Link>
+                ))}
+              </div>
             </Card>
           )}
 
@@ -431,6 +578,22 @@ export function TaskDetailPage() {
       </Modal>
 
       <TaskFormModal open={subtaskOpen} onClose={() => setSubtaskOpen(false)} parentTaskId={task._id} defaultProject={task.project?._id} />
+
+      {/* Decline modal */}
+      <Modal
+        open={declineOpen}
+        onClose={() => setDeclineOpen(false)}
+        title="Decline Task"
+        description="Let your manager know why you can't take this on. They'll be notified."
+        footer={
+          <>
+            <Button variant="outline" onClick={() => setDeclineOpen(false)}>Cancel</Button>
+            <Button variant="danger" onClick={handleDecline} loading={m.decline.isPending}>Decline Task</Button>
+          </>
+        }
+      >
+        <Textarea value={declineReason} onChange={(e) => setDeclineReason(e.target.value)} placeholder="Reason for declining…" autoFocus />
+      </Modal>
 
       {/* Edit task modal */}
       <Modal

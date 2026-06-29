@@ -33,7 +33,7 @@ export function ProjectsPage() {
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Project | null>(null);
 
-  const blank = { name: '', key: '', description: '', manager: '', department: '', priority: 'medium', status: 'active', startDate: '', dueDate: '' };
+  const blank = { name: '', key: '', clientName: '', description: '', goals: '', timeline: '', budget: '', manager: '', department: '', priority: 'medium', status: 'active', startDate: '', dueDate: '' };
   const [form, setForm] = useState(blank);
   const set = (k: string, v: string) => setForm((f) => ({ ...f, [k]: v }));
 
@@ -41,7 +41,8 @@ export function ProjectsPage() {
   const openEdit = (p: Project) => {
     setEditing(p);
     setForm({
-      name: p.name, key: p.key || '', description: p.description || '',
+      name: p.name, key: p.key || '', clientName: p.clientName || '', description: p.description || '',
+      goals: (p.goals || []).join('\n'), timeline: p.timeline || '', budget: p.budget ? String(p.budget) : '',
       manager: (p.manager as User)?._id || '', department: (p.department as Department)?._id || '',
       priority: p.priority, status: p.status || 'active', startDate: fmtDate(p.startDate), dueDate: fmtDate(p.dueDate),
     });
@@ -51,7 +52,13 @@ export function ProjectsPage() {
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.name) return toast.error('Project name is required');
-    const body = { ...form, manager: form.manager || undefined, department: form.department || undefined } as any;
+    const body = {
+      ...form,
+      manager: form.manager || undefined,
+      department: form.department || undefined,
+      budget: Number(form.budget) || 0,
+      goals: form.goals ? form.goals.split('\n').map((g) => g.trim()).filter(Boolean) : [],
+    } as any;
     try {
       if (editing) { await update.mutateAsync({ id: editing._id, body }); toast.success('Project updated'); }
       else { await create.mutateAsync(body); toast.success('Project created'); }
@@ -133,9 +140,17 @@ export function ProjectsPage() {
         <form onSubmit={submit} className="space-y-4">
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
             <div className="sm:col-span-2"><FieldGroup label="Project name"><Input value={form.name} onChange={(e) => set('name', e.target.value)} placeholder="e.g. Atlas Cloud Migration" required /></FieldGroup></div>
-            <FieldGroup label="Key"><Input value={form.key} onChange={(e) => set('key', e.target.value.toUpperCase())} placeholder="ATL" maxLength={5} /></FieldGroup>
+            <FieldGroup label="Key" hint="Used for task codes"><Input value={form.key} onChange={(e) => set('key', e.target.value.toUpperCase())} placeholder="ATL" maxLength={5} /></FieldGroup>
+          </div>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+            <div className="sm:col-span-2"><FieldGroup label="Client name"><Input value={form.clientName} onChange={(e) => set('clientName', e.target.value)} placeholder="e.g. Acme Corp" /></FieldGroup></div>
+            <FieldGroup label="Budget (USD)"><Input type="number" min="0" value={form.budget} onChange={(e) => set('budget', e.target.value)} placeholder="50000" /></FieldGroup>
           </div>
           <FieldGroup label="Description"><Textarea value={form.description} onChange={(e) => set('description', e.target.value)} placeholder="What is this project about?" /></FieldGroup>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <FieldGroup label="Goals" hint="One per line"><Textarea value={form.goals} onChange={(e) => set('goals', e.target.value)} placeholder={'Migrate to cloud\nReduce costs 30%'} className="min-h-[80px]" /></FieldGroup>
+            <FieldGroup label="Timeline"><Textarea value={form.timeline} onChange={(e) => set('timeline', e.target.value)} placeholder="e.g. Q1–Q2, 3 phases over 6 months" className="min-h-[80px]" /></FieldGroup>
+          </div>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <FieldGroup label="Assign manager">
               <Select value={form.manager} onChange={(e) => set('manager', e.target.value)}>
