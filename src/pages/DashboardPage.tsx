@@ -8,12 +8,15 @@ import {
   ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, Cell,
 } from 'recharts';
 import { useAuth } from '@/contexts/AuthContext';
-import { useDashboard, useTasks, useActivity } from '@/hooks/queries';
+import { useDashboard, useTasks, useActivity, useProjects } from '@/hooks/queries';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { StatCard } from '@/components/shared/StatCard';
 import { StatGridSkeleton } from '@/components/ui/Skeleton';
 import { Card, CardHeader } from '@/components/ui/Card';
-import { ProgressRing } from '@/components/ui/Progress';
+import { ProgressBar, ProgressRing } from '@/components/ui/Progress';
+import { PriorityBadge } from '@/components/ui/Badge';
+import { Avatar } from '@/components/ui/Avatar';
+import { ChevronRight } from 'lucide-react';
 import { ActivityFeed } from '@/components/shared/ActivityFeed';
 import { TaskCard } from '@/components/shared/TaskCard';
 import { EmptyState } from '@/components/ui/EmptyState';
@@ -57,6 +60,8 @@ export function DashboardPage() {
         <EmployeeStats stats={stats} />
       )}
 
+      {(user?.role === 'admin' || user?.role === 'manager') && <ProjectsOverview />}
+
       <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-3">
         <Card className="lg:col-span-2">
           <CardHeader
@@ -86,6 +91,43 @@ export function DashboardPage() {
         </Card>
       </div>
     </div>
+  );
+}
+
+function ProjectsOverview() {
+  const { data: projects } = useProjects();
+  if (!projects?.length) return null;
+  return (
+    <Card className="mt-6">
+      <CardHeader
+        title="Projects"
+        subtitle="Click a project to open its full workspace"
+        action={<Link to="/projects" className="text-sm font-medium text-primary hover:underline">View all</Link>}
+      />
+      <div className="divide-y divide-border">
+        {projects.slice(0, 5).map((p) => (
+          <Link key={p._id} to={`/projects/${p._id}`} className="flex items-center gap-4 px-6 py-3.5 transition-colors hover:bg-muted/40">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-sm font-bold text-white" style={{ background: p.color }}>
+              {p.key || p.name[0]}
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="truncate font-semibold text-foreground">{p.name}</p>
+              <p className="truncate text-xs text-muted-foreground">{p.department?.name || 'No department'} · {p.taskCount ?? 0} tasks</p>
+            </div>
+            <div className="hidden w-40 sm:block">
+              <div className="mb-1 flex items-center justify-between text-xs">
+                <span className="text-muted-foreground">Progress</span>
+                <span className="font-semibold text-foreground">{p.progress}%</span>
+              </div>
+              <ProgressBar value={p.progress} />
+            </div>
+            <PriorityBadge priority={p.priority} className="hidden md:inline-flex" />
+            {p.manager && <Avatar name={p.manager.name} size="xs" className="hidden lg:flex" />}
+            <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />
+          </Link>
+        ))}
+      </div>
+    </Card>
   );
 }
 

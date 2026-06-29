@@ -92,7 +92,7 @@ export function ProjectsPage() {
                     {p.key || p.name[0]}
                   </div>
                   <div>
-                    <Link to={`/tasks?project=${p._id}`} className="font-semibold text-foreground hover:text-primary">{p.name}</Link>
+                    <Link to={`/projects/${p._id}`} className="font-semibold text-foreground hover:text-primary">{p.name}</Link>
                     <p className="text-xs text-muted-foreground">{p.department?.name || 'No department'}</p>
                   </div>
                 </div>

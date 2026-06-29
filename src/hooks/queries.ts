@@ -106,6 +106,7 @@ export function useProjectMutations() {
     create: useMutation({ mutationFn: (body: Partial<Project>) => api.post('/projects', body), onSuccess: invalidate }),
     update: useMutation({ mutationFn: ({ id, body }: { id: string; body: Partial<Project> }) => api.put(`/projects/${id}`, body), onSuccess: invalidate }),
     remove: useMutation({ mutationFn: (id: string) => api.delete(`/projects/${id}`), onSuccess: invalidate }),
+    recalc: useMutation({ mutationFn: (id: string) => api.post(`/projects/${id}/recalculate`), onSuccess: invalidate }),
   };
 }
 

@@ -11,6 +11,7 @@ import { DashboardPage } from './pages/DashboardPage';
 import { TasksPage } from './pages/TasksPage';
 import { TaskDetailPage } from './pages/TaskDetailPage';
 import { ProjectsPage } from './pages/ProjectsPage';
+import { ProjectDetailPage } from './pages/ProjectDetailPage';
 import { PeoplePage } from './pages/PeoplePage';
 import { TeamPage } from './pages/TeamPage';
 import { DepartmentsPage } from './pages/DepartmentsPage';
@@ -58,6 +59,7 @@ export default function App() {
         <Route path="/tasks" element={<TasksPage />} />
         <Route path="/tasks/:id" element={<TaskDetailPage />} />
         <Route path="/projects" element={<Protected roles={['admin', 'manager']}><ProjectsPage /></Protected>} />
+        <Route path="/projects/:id" element={<Protected roles={['admin', 'manager']}><ProjectDetailPage /></Protected>} />
         <Route path="/people" element={<Protected roles={['admin']}><PeoplePage /></Protected>} />
         <Route path="/team" element={<Protected roles={['manager']}><TeamPage /></Protected>} />
         <Route path="/departments" element={<Protected roles={['admin']}><DepartmentsPage /></Protected>} />
