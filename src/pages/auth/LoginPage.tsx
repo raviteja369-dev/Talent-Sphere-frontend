@@ -8,12 +8,6 @@ import { Button } from '@/components/ui/Button';
 import { Input, Label } from '@/components/ui/Field';
 import { apiError } from '@/lib/api';
 
-const DEMO = [
-  { role: 'Admin', email: 'admin@talentsphere.com', password: 'Admin@123' },
-  { role: 'Manager', email: 'manager1@talentsphere.com', password: 'Manager@123' },
-  { role: 'Employee', email: 'employee1@talentsphere.com', password: 'Employee@123' },
-];
-
 export function LoginPage() {
   const { login } = useAuth();
   const navigate = useNavigate();
@@ -34,11 +28,6 @@ export function LoginPage() {
     } finally {
       setLoading(false);
     }
-  };
-
-  const quickFill = (d: (typeof DEMO)[number]) => {
-    setEmail(d.email);
-    setPassword(d.password);
   };
 
   return (
@@ -140,21 +129,6 @@ export function LoginPage() {
               Sign in <ArrowRight className="h-4 w-4" />
             </Button>
           </form>
-
-          <div className="mt-8">
-            <p className="mb-2.5 text-center text-xs font-medium uppercase tracking-wider text-muted-foreground">Demo accounts — click to fill</p>
-            <div className="grid grid-cols-3 gap-2">
-              {DEMO.map((d) => (
-                <button
-                  key={d.role}
-                  onClick={() => quickFill(d)}
-                  className="rounded-lg border border-border bg-surface px-2 py-2.5 text-center text-xs font-medium transition-colors hover:border-primary hover:bg-accent"
-                >
-                  {d.role}
-                </button>
-              ))}
-            </div>
-          </div>
         </motion.div>
       </div>
     </div>
