@@ -27,7 +27,7 @@ import { ActivityFeed } from '@/components/shared/ActivityFeed';
 import { ChartTooltip } from '@/components/shared/ChartTooltip';
 import { STATUS_CONFIG, PRIORITIES } from '@/lib/constants';
 import { cn, formatDate, nFormat } from '@/lib/utils';
-import { apiError } from '@/lib/api';
+import { apiError, assetUrl } from '@/lib/api';
 import type { Task, User, Department } from '@/lib/types';
 
 const TABS = [
@@ -442,7 +442,7 @@ function FilesTab({ tasks }: { tasks: Task[] }) {
         {files.length ? (
           <div className="space-y-2">
             {files.map((f, i) => (
-              <a key={i} href={f.url} target="_blank" rel="noreferrer" className="flex items-center gap-3 rounded-lg border border-border p-3 transition-colors hover:bg-muted/40">
+              <a key={i} href={assetUrl(f.url)} target="_blank" rel="noreferrer" className="flex items-center gap-3 rounded-lg border border-border p-3 transition-colors hover:bg-muted/40">
                 <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-muted"><FileText className="h-4 w-4 text-muted-foreground" /></div>
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-medium text-foreground">{f.name}</p>

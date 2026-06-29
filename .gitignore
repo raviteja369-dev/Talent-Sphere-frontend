@@ -29,3 +29,5 @@ pnpm-debug.log*
 .env
 .env.*
 !.env.example
+# Public (non-secret) production API URL — needed for deploy builds
+!.env.production

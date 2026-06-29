@@ -24,7 +24,7 @@ import { ActivityFeed } from '@/components/shared/ActivityFeed';
 import { TaskCard } from '@/components/shared/TaskCard';
 import { cn, formatDate, timeAgo, isOverdue } from '@/lib/utils';
 import { progressColor } from '@/lib/constants';
-import { apiError, apiErrors } from '@/lib/api';
+import { apiError, apiErrors, assetUrl } from '@/lib/api';
 
 const PROGRESS_STEPS = [0, 30, 60, 90, 100];
 
@@ -516,7 +516,7 @@ export function TaskDetailPage() {
               {task.attachments?.length ? (
                 <div className="space-y-2">
                   {task.attachments.map((a) => (
-                    <a key={a._id} href={a.url} target="_blank" rel="noreferrer" className="flex items-center gap-3 rounded-lg border border-border p-3 transition-colors hover:bg-muted/40">
+                    <a key={a._id} href={assetUrl(a.url)} target="_blank" rel="noreferrer" className="flex items-center gap-3 rounded-lg border border-border p-3 transition-colors hover:bg-muted/40">
                       <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-muted"><FileText className="h-4 w-4 text-muted-foreground" /></div>
                       <div className="min-w-0 flex-1">
                         <p className="truncate text-sm font-medium text-foreground">{a.name}</p>
