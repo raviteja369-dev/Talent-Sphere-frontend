@@ -1,4 +1,3 @@
-import { useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { Area, AreaChart, ResponsiveContainer } from 'recharts';
 import { ArrowDownRight, ArrowUpRight, type LucideIcon } from 'lucide-react';
@@ -14,9 +13,9 @@ interface StatCardProps {
   tone?: Tone;
   /** Short supporting description shown under the metric. */
   hint?: string;
-  /** Percentage change vs. previous period. Omit to auto-derive a stable, illustrative trend. */
+  /** Real percentage change vs. previous period. Only shown when provided. */
   change?: number;
-  /** Sparkline series. Omit to auto-generate a deterministic trend from the label. */
+  /** Real sparkline series. Only shown when provided. */
   trend?: number[];
   delay?: number;
 }
@@ -34,36 +33,13 @@ const TONES: Record<Tone, { bg: string; fg: string; stroke: string }> = {
   rose: { bg: 'bg-red-50 dark:bg-red-500/15', fg: 'text-red-600 dark:text-red-400', stroke: '#DC2626' },
 };
 
-// Stable pseudo-random in [0,1) from a string seed — keeps the illustrative
-// sparkline + change consistent across renders (no flicker, no fake volatility).
-function seeded(seed: string) {
-  let h = 2166136261;
-  for (let i = 0; i < seed.length; i++) {
-    h ^= seed.charCodeAt(i);
-    h = Math.imul(h, 16777619);
-  }
-  return ((h >>> 0) % 1000) / 1000;
-}
-
 export function StatCard({ label, value, icon: Icon, tone = 'blue', hint, change, trend, delay = 0 }: StatCardProps) {
   const t = TONES[tone] ?? TONES.blue;
 
-  const { series, delta } = useMemo(() => {
-    if (trend && change !== undefined) return { series: trend.map((v, i) => ({ i, v })), delta: change };
-    const base = seeded(label);
-    const dir = base > 0.42 ? 1 : -1;
-    const pts: number[] = [];
-    let cur = 40 + base * 30;
-    for (let i = 0; i < 9; i++) {
-      cur += dir * (seeded(label + i) - 0.35) * 14;
-      cur = Math.max(8, Math.min(95, cur));
-      pts.push(cur);
-    }
-    const computedDelta = change ?? Math.round((dir * (4 + base * 16)) * 10) / 10;
-    return { series: (trend ?? pts).map((v, i) => ({ i, v })), delta: computedDelta };
-  }, [label, trend, change]);
-
-  const up = delta >= 0;
+  const hasChange = typeof change === 'number';
+  const hasTrend = Array.isArray(trend) && trend.length > 0;
+  const series = hasTrend ? trend!.map((v, i) => ({ i, v })) : [];
+  const up = (change ?? 0) >= 0;
   const gradId = `spark-${label.replace(/[^a-z0-9]/gi, '')}`;
 
   return (
@@ -77,36 +53,42 @@ export function StatCard({ label, value, icon: Icon, tone = 'blue', hint, change
         <div className={cn('flex h-11 w-11 items-center justify-center rounded-xl transition-transform duration-200 group-hover:scale-105', t.bg)}>
           <Icon className={cn('h-[22px] w-[22px]', t.fg)} />
         </div>
-        <span
-          className={cn(
-            'inline-flex items-center gap-0.5 rounded-full px-2 py-0.5 text-xs font-semibold',
-            up ? 'bg-green-50 text-green-700 dark:bg-green-500/15 dark:text-green-400' : 'bg-red-50 text-red-700 dark:bg-red-500/15 dark:text-red-400'
-          )}
-        >
-          {up ? <ArrowUpRight className="h-3 w-3" /> : <ArrowDownRight className="h-3 w-3" />}
-          {Math.abs(delta)}%
-        </span>
+        {hasChange && (
+          <span
+            className={cn(
+              'inline-flex items-center gap-0.5 rounded-full px-2 py-0.5 text-xs font-semibold',
+              up ? 'bg-green-50 text-green-700 dark:bg-green-500/15 dark:text-green-400' : 'bg-red-50 text-red-700 dark:bg-red-500/15 dark:text-red-400'
+            )}
+          >
+            {up ? <ArrowUpRight className="h-3 w-3" /> : <ArrowDownRight className="h-3 w-3" />}
+            {Math.abs(change!)}%
+          </span>
+        )}
       </div>
 
       <p className="mt-4 text-sm font-medium text-muted-foreground">{label}</p>
       <Counter value={value} className="mt-1 block font-display text-3xl font-bold tracking-tight text-foreground" />
 
-      <div className="mt-3 flex items-end justify-between gap-3">
-        <p className="text-xs text-muted-foreground">{hint ?? (up ? 'Trending up vs. last period' : 'Down vs. last period')}</p>
-        <div className="h-9 w-24 shrink-0">
-          <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={series} margin={{ top: 4, right: 0, left: 0, bottom: 0 }}>
-              <defs>
-                <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor={t.stroke} stopOpacity={0.28} />
-                  <stop offset="100%" stopColor={t.stroke} stopOpacity={0} />
-                </linearGradient>
-              </defs>
-              <Area type="monotone" dataKey="v" stroke={t.stroke} strokeWidth={2} fill={`url(#${gradId})`} isAnimationActive />
-            </AreaChart>
-          </ResponsiveContainer>
+      {(hint || hasTrend) && (
+        <div className="mt-3 flex items-end justify-between gap-3">
+          {hint && <p className="text-xs text-muted-foreground">{hint}</p>}
+          {hasTrend && (
+            <div className="h-9 w-24 shrink-0">
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={series} margin={{ top: 4, right: 0, left: 0, bottom: 0 }}>
+                  <defs>
+                    <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor={t.stroke} stopOpacity={0.28} />
+                      <stop offset="100%" stopColor={t.stroke} stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <Area type="monotone" dataKey="v" stroke={t.stroke} strokeWidth={2} fill={`url(#${gradId})`} isAnimationActive />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
+          )}
         </div>
-      </div>
+      )}
     </motion.div>
   );
 }
